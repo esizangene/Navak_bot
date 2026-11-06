@@ -42,10 +42,10 @@ async function showJoinPrompt(env, chatId) {
 async function handleUpdate(update, env) {
   if (update.callback_query) {
     const q = update.callback_query;
-    await tg(env, "answerCallbackQuery", { callback_query_id: q.id });
     if (q.data === "check_join") {
       try {
         if (await isMember(env, q.from.id)) {
+          await tg(env, "answerCallbackQuery", { callback_query_id: q.id });
           await tg(env, "editMessageText", {
             chat_id: q.message.chat.id,
             message_id: q.message.message_id,
@@ -59,9 +59,14 @@ async function handleUpdate(update, env) {
           });
         }
       } catch {
-        await sendText(env, q.message.chat.id,
-          "بررسی عضویت انجام نشد؛ مدیر باید ربات را در کانال ادمین کند.");
+        await tg(env, "answerCallbackQuery", {
+          callback_query_id: q.id,
+          text: "بررسی عضویت انجام نشد؛ مدیر باید ربات را ادمین کانال کند.",
+          show_alert: true,
+        });
       }
+    } else {
+      await tg(env, "answerCallbackQuery", { callback_query_id: q.id });
     }
     return;
   }
