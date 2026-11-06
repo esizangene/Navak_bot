@@ -112,8 +112,19 @@ async function handleUpdate(update, env) {
     url.searchParams.set("entity", "song");
     url.searchParams.set("limit", "5");
     const response = await fetch(url);
-    if (!response.ok) throw new Error("Music search failed");
-    const items = (await response.json()).results || [];
+    if (!response.ok) {
+      console.error("NAVAK music search HTTP error", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      throw new Error(`Music search HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    const items = payload.results || [];
+    console.log("NAVAK music search completed", {
+      resultCount: items.length,
+      termLength: text.length,
+    });
     if (!items.length) {
       await sendText(env, chatId, "نتیجه‌ای پیدا نشد؛ نام آهنگ یا خواننده را دقیق‌تر بفرست.");
       return;
@@ -128,7 +139,11 @@ async function handleUpdate(update, env) {
       if (item.previewUrl) lines.push(`▶️ پیش‌نمایش: ${item.previewUrl}`);
       await sendText(env, chatId, lines.join("\n"));
     }
-  } catch {
+  } catch (error) {
+    console.error("NAVAK music search failed", {
+      name: error?.name || "Error",
+      message: error?.message || String(error),
+    });
     await sendText(env, chatId, "جست‌وجو موقتاً با خطا روبه‌رو شد. کمی بعد دوباره امتحان کن.");
   }
 }
