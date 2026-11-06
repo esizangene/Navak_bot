@@ -143,7 +143,7 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/setup") {
       const key = url.searchParams.get("key");
-      if (!env.WEBHOOK_SECRET || key !== env.WEBHOOK_SECRET) {
+      if (!env.SETUP_KEY || key !== env.SETUP_KEY) {
         return new Response("Unauthorized", { status: 401 });
       }
       if (!env.TELEGRAM_BOT_TOKEN || !env.REQUIRED_CHANNEL) {
