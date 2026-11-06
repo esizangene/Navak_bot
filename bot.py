@@ -54,8 +54,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await update.effective_message.reply_text(
         "🎧 به نواک خوش آمدی!\nنام آهنگ یا خواننده را بفرست تا جست‌وجو کنم.\n"
-        "فعلاً نتایج و پیش‌نمایش‌های مجاز نمایش داده می‌شوند؛ دریافت فایل فقط با مجوز صاحب اثر.\\n\\n"
-        "🎁 لینک دعوت اختصاصی: /ref\\n📊 آمار دعوت‌ها: /mystats\\n🏆 برترین معرف‌ها: /top"
+        "فعلاً نتایج و پیش‌نمایش‌های مجاز نمایش داده می‌شوند؛ دریافت فایل فقط با مجوز صاحب اثر.\n\n"
+        "🎁 لینک دعوت اختصاصی: /ref\n📊 آمار دعوت‌ها: /mystats\n🏆 برترین معرف‌ها: /top"
     )
 
 async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
