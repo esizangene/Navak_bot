@@ -3,7 +3,8 @@ import logging
 from urllib.parse import quote
 import httpx
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters, CallbackQueryHandler, ChatMemberHandler
+from referrals import send_invite, handle_join, stats_message, leaderboard
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("navak")
@@ -99,15 +100,37 @@ async def search_music(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log.exception("Search failed")
         await update.effective_message.reply_text("جست‌وجو موقتاً با خطا روبه‌رو شد. کمی بعد دوباره امتحان کن.")
 
+async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await gate(update, context):
+        return
+    await send_invite(update.effective_message, update.effective_user, context.bot)
+
+async def referral_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await gate(update, context):
+        return
+    await update.effective_message.reply_text(await stats_message(update.effective_user.id))
+
+async def referral_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    if query.data == "navak_ref_stats":
+        await query.message.reply_text(await stats_message(query.from_user.id))
+    elif query.data == "navak_ref_top":
+        await query.message.reply_text(leaderboard())
+
 def main():
     if not TOKEN or not CHANNEL or "YOUR_CHANNEL" in CHANNEL:
         raise RuntimeError("Set TELEGRAM_BOT_TOKEN and REQUIRED_CHANNEL in environment variables.")
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("ref", referral_command))
+    app.add_handler(CommandHandler("mystats", referral_stats))
+    app.add_handler(CallbackQueryHandler(referral_callback, pattern="^navak_ref_(stats|top)$"))
+    app.add_handler(ChatMemberHandler(handle_join, ChatMemberHandler.CHAT_MEMBER))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, search_music))
     app.add_handler(__import__("telegram.ext", fromlist=["CallbackQueryHandler"]).CallbackQueryHandler(check_join, pattern="^check_join$"))
     log.info("Navak Telegram bot is starting")
-    app.run_polling()
+    app.run_polling(allowed_updates=["message", "callback_query", "chat_member"])
 
 if __name__ == "__main__":
     main()
