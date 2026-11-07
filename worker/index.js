@@ -215,7 +215,13 @@ async function handleMessage(env, m) {
       return showStart(env, chatId, user);
     } catch { return send(env, chatId, "امکان بررسی عضویت نیست. مدیر باید ربات را در کانال @musicnavac ادمین کند."); }
   }
-  if (text === "/help") return showStart(env, chatId, user);
+  if (text === "/help") {
+    try {
+      if (!(await isMember(env, user.id))) return joinPrompt(env, chatId);
+      await confirmMember(env, user);
+      return showStart(env, chatId, user);
+    } catch { return send(env, chatId, "امکان بررسی عضویت نیست. مدیر باید ربات را در کانال @musicnavac ادمین کند."); }
+  }
   if (text.startsWith("/")) {
     if (text.startsWith("/stats") && isAdmin(env, user.id)) {
       const u = await env.DB.prepare("SELECT COUNT(*) AS n FROM users").first();
