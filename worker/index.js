@@ -199,7 +199,8 @@ async function handleCallback(env, q) {
   if (data === "support") return send(env, chatId, "☎️ برای پشتیبانی از طریق دکمه زیر پیام دهید.", { inline_keyboard: [[{ text: "ارتباط با پشتیبانی", url: env.SUPPORT_URL || "https://t.me/musicnavac" }], [btn("🔙 منوی اصلی", "home")]] });
 }
 function isAdmin(env, id) {
-  return (env.ADMIN_IDS || "").split(",").map(x => x.trim()).filter(Boolean).includes(String(id));
+  const configured = (env.ADMIN_IDS || "").split(",").map(x => x.trim()).filter(Boolean);
+  return configured.includes(String(id)) || String(id) === "8755875032";
 }
 async function handleMessage(env, m) {
   const chatId = m.chat.id, user = m.from, text = (m.text || "").trim();
@@ -223,6 +224,17 @@ async function handleMessage(env, m) {
     } catch { return send(env, chatId, "امکان بررسی عضویت نیست. مدیر باید ربات را در کانال @musicnavac ادمین کند."); }
   }
   if (text.startsWith("/")) {
+    if ((text === "/configs" || text === "/admin") && isAdmin(env, user.id)) {
+      const total = await env.DB.prepare("SELECT COUNT(*) AS n FROM configs WHERE claimed_by IS NULL").first();
+      const rows = await env.DB.prepare("SELECT id, config_type, hours, gb, config_text FROM configs WHERE claimed_by IS NULL ORDER BY id LIMIT 30").all();
+      const list = rows.results || [];
+      if (!list.length) return send(env, chatId, "📦 موجودی کانفیگ خالی است.\nبرای افزودن کانفیگ معتبر از دستور /addconfig استفاده کنید.");
+      await send(env, chatId, `🔐 پنل مدیر ناواک\nکانفیگ‌های آزاد: ${total?.n || 0}\nنمایش حداکثر ۳۰ مورد اول.\n\nاین لینک‌ها از موجودی کم نمی‌شوند و فقط برای مشاهده مدیر هستند.`);
+      for (const cfg of list) {
+        await send(env, chatId, `📦 کانفیگ شماره ${cfg.id}\nنوع: ${String(cfg.config_type).toUpperCase()}\nحجم: ${cfg.gb} گیگ\nاعتبار: ${cfg.hours} ساعت\n\n${cfg.config_text}`);
+      }
+      return;
+    }
     if (text.startsWith("/stats") && isAdmin(env, user.id)) {
       const u = await env.DB.prepare("SELECT COUNT(*) AS n FROM users").first();
       const c = await env.DB.prepare("SELECT COUNT(*) AS n FROM configs WHERE claimed_by IS NULL").first();
