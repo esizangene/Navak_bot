@@ -231,7 +231,7 @@ async function handleMessage(env, m) {
     }
     if (text.startsWith("/addconfig") && isAdmin(env, user.id)) {
       const p = text.split(/\s+/);
-      if (p.length < 5 || !["vless", "vmess"].includes(p[1].toLowerCase()) || !/^https?:\/\//.test(p.slice(4).join(" "))) {
+      if (p.length < 5 || !["vless", "vmess"].includes(p[1].toLowerCase()) || !/^(vless|vmess):\/\//i.test(p.slice(4).join(" "))) {
         return send(env, chatId, "فرمت صحیح:\n/addconfig vless 1 1 https://...\nیا\n/addconfig vmess 24 1 https://...\n(نوع، ساعت، گیگ، لینک کانفیگ)");
       }
       await env.DB.prepare("INSERT INTO configs (config_type, hours, gb, config_text) VALUES (?, ?, ?, ?)")
